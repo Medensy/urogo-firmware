@@ -46,5 +46,6 @@ class SIM7020 {
 
 
     String _stringToHexString(String str);
+    String _bufferToHexString(uint8_t buf[], size_t len);
     String _hexStringToString(String hex_str);
 };

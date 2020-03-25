@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <sim7020e.hpp>
+#include <sim7020e.h>
 
 #define isHwReset 1
 // #define hwResetPin 26
@@ -265,6 +265,17 @@ String SIM7020::_stringToHexString(String str) {
   for (uint16_t i=0;i<str.length();i++) {
     sprintf(buf, "%.2x", int(str.charAt(i)));
     output += String(buf);
+  }
+  Serial.println(output);
+  return output;
+}
+
+String SIM7020::_bufferToHexString(uint8_t buf[], size_t len) {
+  String output;
+  char tmp_buf[3];
+  for (uint16_t i=0;i<len;i++) {
+    sprintf(tmp_buf, "%.2x", buf[i]);
+    output += String(tmp_buf);
   }
   Serial.println(output);
   return output;
