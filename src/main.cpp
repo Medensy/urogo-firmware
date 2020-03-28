@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <sdcard.h>
 #include <sim7020e.h>
 #include <hx711.h>
 
@@ -47,7 +48,12 @@ typedef enum {
 state_t state = STATE_INITIALIZE;
 uint32_t last_time_sync = 0;
 
+SDCARD sdcard;
 HX711 scale;
+
+#define MAX_DATA_LENGTH 1800 // sampling rate 10 SPS, record time 180 s
+int32_t data_buf[MAX_DATA_LENGTH];
+size_t data_idx = 0;
 
 void setup() {
   state = STATE_INITIALIZE;
@@ -69,6 +75,10 @@ void setup() {
     case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
     default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
   }
+  
+  sdcard.init(SD_CS_PIN, true);
+  sdcard.printCardDetails();
+  sdcard.printFileList();
 
   uint8_t i;
   for(i=0;i<10;i++) {
@@ -81,6 +91,7 @@ void setup() {
   //   Serial.println(digitalRead(BTN_PIN));
   //   delay(100);
   // }
+
   
   if (digitalRead(BTN_PIN)==LOW) {
     Serial.println("entering maintenance mode");
@@ -112,15 +123,24 @@ void loop() {
       digitalWrite(HX711_PWR_EN_PIN, HIGH);
       delay(1000);
       scale.begin(HX711_DOUT_PIN, HX711_SCK_PIN);
-      while(true){
+      // static uint32_t t = millis();
+
+      while(data_idx < MAX_DATA_LENGTH){
         if (scale.is_ready()) {
-          long reading = scale.read();
-          Serial.print("HX711 reading: ");
-          Serial.println(reading);
+          data_buf[data_idx] = scale.read();
+          Serial.print(data_idx);
+          Serial.print(") ");
+          Serial.println(data_buf[data_idx]);
+          // Serial.println(millis()-t);
+          // t = millis();
+          data_idx++;
           delay(50);
         }
       }
       digitalWrite(HX711_PWR_EN_PIN, LOW);
+      assert(sizeof(data_buf[0])==4);
+      sdcard.writeFile("date.bin",(uint8_t *)data_buf, data_idx*(sizeof(data_buf[0])));
+      data_idx = 0;
       state = STATE_IDLE;
       break;
     case STATE_MAINTENANCE:
