@@ -4,6 +4,7 @@ class SDCARD {
     bool _debug;
   public:
     bool init(int ss_pin, bool debug);
+    void deinit(void);
     uint8_t getCardType();
     uint64_t getUsedBytes();
     uint64_t getTotalBytes();

@@ -11,6 +11,7 @@ class SIM7020 {
   public:
     void init(int baudrate, bool debug);
     void init(int baudrate, int tx_pin, int rx_pin, int reset_pin, bool debug);
+    void deinit(void);
     void powerOn(void);
     void powerOff(void);
     bool sendCmd(String cmd, String ok_str, String err_str);

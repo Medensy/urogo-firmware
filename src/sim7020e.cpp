@@ -32,6 +32,11 @@ void SIM7020::init(int baudrate, int tx_pin, int rx_pin, int reset_pin, bool deb
   this->serial_ptr->flush();  
 }
 
+void SIM7020::deinit(void) {
+  serial_ptr->end();
+  powerOff();
+}
+
 void SIM7020::powerOn(void) {
   digitalWrite(reset_pin, HIGH);
   delay(200);
@@ -74,7 +79,7 @@ bool SIM7020::sendCmd(String cmd, String ok_str, String err_str) {
     }
     if (timeout_flag) break;
     tmp = serial_ptr->readStringUntil('\n');
-    Serial.println(tmp);
+    // Serial.println(tmp);
     if (tmp.indexOf(ok_str) >= 0) {
       _output_str = output;
       _return_str = tmp;
@@ -83,7 +88,7 @@ bool SIM7020::sendCmd(String cmd, String ok_str, String err_str) {
         Serial.println(_return_str);
       }
       return true;
-    } else if (tmp.indexOf(ok_str) >= 0) {
+    } else if (tmp.indexOf(err_str) >= 0) {
       _output_str = output;
       _return_str = tmp;
       if (debug) {
@@ -126,8 +131,7 @@ int SIM7020::setEchoMode(int mode) {
 // AT
 int SIM7020::check() {
   String cmd = "AT";
-  sendCmd(cmd);
-  return 0;
+  return sendCmd(cmd);
 }
 
 // AT+GSV

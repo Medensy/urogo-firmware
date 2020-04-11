@@ -20,6 +20,11 @@ bool SDCARD::init(int ss_pin, bool debug)
   return true;
 }
 
+void SDCARD::deinit(void)
+{
+  SD.end();
+}
+
 uint8_t SDCARD::getCardType()
 {
   return SD.cardType();
