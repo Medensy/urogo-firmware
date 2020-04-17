@@ -2,7 +2,7 @@
 #include <SD.h>
 #include <FS.h>
 
-#include <sdcard.h>
+#include <dv_sdcard.h>
 
 bool SDCARD::init(int ss_pin, bool debug)
 {

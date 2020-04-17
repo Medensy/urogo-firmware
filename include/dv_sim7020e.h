@@ -45,6 +45,8 @@ class SIM7020 {
     bool disconnectHTTPSocket(int socket_id); // AT+CHTTPDISCON=0
     bool closeHTTPSocket(int socket_id); // AT+CHTTPDESTROY=0
 
+    bool startQueryNetwork(String host);
+    bool stopQueryNetwork(void);
 
     String _stringToHexString(String str);
     String _bufferToHexString(uint8_t buf[], size_t len);

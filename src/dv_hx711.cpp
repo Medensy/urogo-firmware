@@ -8,7 +8,7 @@
  *
 **/
 #include <Arduino.h>
-#include "hx711.h"
+#include "dv_hx711.h"
 
 // TEENSYDUINO has a port of Dean Camera's ATOMIC_BLOCK macros for AVR to ARM Cortex M3.
 #define HAS_ATOMIC_BLOCK (defined(ARDUINO_ARCH_AVR) || defined(TEENSYDUINO))

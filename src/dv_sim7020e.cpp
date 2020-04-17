@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <sim7020e.h>
+#include <dv_sim7020e.h>
 
 #define isHwReset 1
 // #define hwResetPin 26
@@ -260,6 +260,16 @@ bool SIM7020::disconnectHTTPSocket(int socket_id) {
  // AT+CHTTPDESTROY=0
 bool SIM7020::closeHTTPSocket(int socket_id) {
   String cmd = "AT+CHTTPDESTROY="+String(socket_id);
+  return sendCmd(cmd);
+}
+
+bool SIM7020::startQueryNetwork(String host) {
+  String cmd = "AT+CSNTPSTART="+host;
+  return sendCmd(cmd);
+}
+
+bool SIM7020::stopQueryNetwork(void) {
+  String cmd = "AT+CSNTPSTOP";
   return sendCmd(cmd);
 }
 
