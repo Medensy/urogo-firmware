@@ -1,9 +1,11 @@
-// #define LED_PIN 2
-// #define BTN_PIN 13
+// #define GLED_PIN 2
+#define RLED_PIN 2
+#define START_BTN_PIN 13
 
-#define LED0_PIN 25
-#define LED1_PIN 33
-#define BTN_PIN 32
+#define GLED_PIN 25
+// #define RLED_PIN 33
+// #define START_BTN_PIN 32
+#define MODE_CONFIG_PIN 32
 
 #define HX711_DOUT_PIN 15
 #define HX711_SCK_PIN 2
