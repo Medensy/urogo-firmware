@@ -26,8 +26,6 @@ bool nbiot_init(void)
   sim7020.setPacketDataProtocol("IPV4V6");
   sim7020.setPhoneFunctionality(1);
   sim7020.setAttachStatus(1);
-  Serial.print(">>>>");
-  Serial.println(sim7020.getReturnString());
 
   while(sim7020.getAttachStatus().indexOf("+CGATT: 1") < 0)
   {
@@ -37,8 +35,6 @@ bool nbiot_init(void)
       return false;
     }
     sim7020.setAttachStatus(1);
-    Serial.print(">>>>");
-    Serial.println(sim7020.getReturnString());
     delay(1000);
   }
 
@@ -54,8 +50,6 @@ void nbiot_deinit(void)
 
 void nbiot_upload_data(String host, uint16_t port, uint8_t *buffer, size_t length)
 {
-  nbiot_init();
-
   sim7020.createHTTPSocket(host, port);
   sim7020.connectHTTPSocket(0);
 
@@ -67,7 +61,6 @@ void nbiot_upload_data(String host, uint16_t port, uint8_t *buffer, size_t lengt
 
   sim7020.disconnectHTTPSocket(0);
   sim7020.closeHTTPSocket(0);
-  nbiot_deinit();
 }
 
 void nbiot_sync_time(String host)
@@ -78,23 +71,15 @@ void nbiot_sync_time(String host)
   time_t now_time;
   struct timeval tv;
 
-  nbiot_init();
   for (int i=0;i<5;i++)
   {
     sim7020.startQueryNetwork(host);
-    Serial.print("1) ");
-    Serial.println(sim7020.getOutputString());
-    Serial.print("2) ");
     output_str = sim7020.getOutputString();
     start_index = output_str.indexOf("+CSNTP:");
-    Serial.println(start_index);
-    Serial.print("3) ");
-    // Serial.println(sim7020.getReturnString());
 
     if(start_index >= 0)
     {
       time_str = output_str.substring(start_index+8,start_index+25);
-      Serial.println(time_str);
 
       now_tm.tm_year = time_str.substring(0,2).toInt() + 2000 - 1900;
       now_tm.tm_mon = time_str.substring(3,5).toInt() - 1;
@@ -110,14 +95,12 @@ void nbiot_sync_time(String host)
 
       break;
     }
-    Serial.println();
-
-    delay(1000);
+    else
+    {
+      delay(1000);
+    }
   }
-  
   sim7020.stopQueryNetwork();
-
-  nbiot_deinit();
 }
 // void sim7020_test() {
 //   sim7020.init(9600, true);

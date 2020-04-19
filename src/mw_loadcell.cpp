@@ -9,6 +9,7 @@ bool loadcell_init(void)
 {
   pinMode(HX711_PWR_EN_PIN, OUTPUT);
   digitalWrite(HX711_PWR_EN_PIN, HIGH);
+  scale.power_up();
   delay(1000);
   scale.begin(HX711_DOUT_PIN, HX711_SCK_PIN);
 
@@ -35,6 +36,7 @@ bool loadcell_init(void)
 
 void loadcell_deinit(void)
 {
+  scale.power_down();
   digitalWrite(HX711_PWR_EN_PIN, LOW);
 }
 
@@ -42,7 +44,6 @@ size_t loadcell_collect_data(int32_t *buffer, size_t max_length, uint32_t timeou
 {
   size_t i=0;
   uint32_t start_time=millis();
-  loadcell_init();
   
   while((i < max_length) && (millis() - start_time < timeout))
   {
@@ -60,6 +61,5 @@ size_t loadcell_collect_data(int32_t *buffer, size_t max_length, uint32_t timeou
       delay(10);
     }
   }
-  loadcell_deinit();
   return i;
 }

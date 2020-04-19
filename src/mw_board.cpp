@@ -21,6 +21,7 @@ bool board_init(void)
   pinMode(RLED_PIN, OUTPUT);
   pinMode(MODE_CONFIG_PIN, INPUT);
   pinMode(START_BTN_PIN, INPUT);
+  pinMode(CHRG_DT_PIN, INPUT);
   
   timer = timerBegin(0, 80, true);
 
@@ -34,6 +35,15 @@ bool board_init(void)
 void board_deinit(void)
 {
 
+}
+bool board_is_charging(void)
+{
+  return digitalRead(CHRG_DT_PIN) == HIGH;
+}
+
+void board_stop_running(void)
+{
+  while(true) delay(10000);
 }
 
 void board_display_stop(void)
@@ -55,7 +65,7 @@ void board_display_waiting(void)
 void board_display_measuring(void)
 {
   board_display_stop();
-  digitalWrite(RLED_PIN, HIGH);
+  digitalWrite(GLED_PIN, HIGH);
 }
 
 void board_display_processing(void)
@@ -74,3 +84,8 @@ void board_display_error(void)
   timerAlarmEnable(timer);
 }
 
+void board_display_fatal(void)
+{
+  board_display_stop();
+  digitalWrite(RLED_PIN, HIGH);
+}

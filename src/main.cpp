@@ -10,7 +10,6 @@
 #include <board_config.h>
 
 #define SLEEP_PERIOD_US 1*1*1000000 // 
-#define TIME_SYNC_TIMEOUT 60*60*24 // time sync every 24 hours, expect 20ppm, error < 1.8s
 
 uint32_t last_time_sync = 0;
 
@@ -18,66 +17,99 @@ uint32_t last_time_sync = 0;
 int32_t data_buf[MAX_DATA_LENGTH];
 size_t data_idx = 0;
 
-void sync_time(void);
-
-void sync_time(void) {
-  static uint32_t last_time_sync = millis();
-  if (last_time_sync == 0 || (millis() - last_time_sync > TIME_SYNC_TIMEOUT)) {
-    last_time_sync = millis();
-    nbiot_init();
-    
-    // pop
-    // nbiot_get_time()
-
-    nbiot_deinit();
-  }
-}
 
 void setup() {
-  size_t len;
+  bool error_flag = false;
   esp_sleep_wakeup_cause_t wakeup_reason;
+
+  size_t len;
+  struct timeval tv;
+  time_t now_time;
+  struct tm *now_tm;
+  char tm_buf[64];
+
   wakeup_reason = esp_sleep_get_wakeup_cause();
 
   board_init();
-
-  struct timeval tv;
-  time_t nowtime;
-  struct tm *nowtm;
-  struct tm time;
-  char tmbuf[64], buf[64];
-
-  // while(true) {
-  //   Serial.println("ok");
-  //   delay(10000);
-  // }
 
   switch (wakeup_reason)
   {
   // idle loop
   case ESP_SLEEP_WAKEUP_TIMER:
     Serial.println("sync time");
-    gettimeofday(&tv, NULL);
-  
-    nowtime = tv.tv_sec;
-    nowtm = localtime(&nowtime);
-    strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
+    board_display_waiting();
 
-    Serial.println("The current time is: "); // P.s. How could i format this like printf("time is: %f%f%f", h, m, s) for example?
-    Serial.println(tmbuf);
-
-    // sync_time();
+    if (!error_flag)
+    {
+      // sync time and get back to sleep
+      Serial.println("sync time from sntp server");
+      board_display_processing();
+      nbiot_sync_time("1.th.pool.ntp.org");
+      board_display_stop();
+    }
+    else
+    {
+      // display error and get back to sleep
+      board_display_error();
+      delay(5000);
+      board_display_stop();
+    }
+    nbiot_deinit();
+    
     break;
 
   // idle user btn interupt
   case ESP_SLEEP_WAKEUP_EXT0:
     Serial.println("user interupt");
-    // check no charging
+    board_display_waiting();
 
-    len = loadcell_collect_data(data_buf, MAX_DATA_LENGTH, 30000);
-    Serial.print("len:");
-    Serial.println(len);
-    sdcard_save_data("test.bin", (uint8_t*) data_buf, len*4);
-    nbiot_upload_data("http://13.229.87.104", 3000, (uint8_t*) data_buf, len*4);
+    // if not charging, run normal operation
+    if (!board_is_charging())
+    {
+
+      error_flag |= !sdcard_init();
+      error_flag |= !loadcell_init();
+      error_flag |= !nbiot_init();
+
+      if (!error_flag)
+      {
+        gettimeofday(&tv, NULL);
+        now_time = tv.tv_sec;
+        now_tm = localtime(&now_time);
+        strftime(tm_buf, sizeof tm_buf, "%Y-%m-%d-%H-%M-%S", now_tm);
+
+        Serial.print("measuring ");
+        Serial.println(tm_buf);
+        board_display_measuring();
+        len = loadcell_collect_data(data_buf, MAX_DATA_LENGTH, 30000);
+
+        board_display_processing();
+        sdcard_save_data(String(tm_buf)+".bin", (uint8_t*) data_buf, len*4);
+        nbiot_upload_data("http://13.229.87.104", 3000, (uint8_t*) data_buf, len*4);
+
+        board_display_stop();
+      }
+      else
+      {
+        // display error and get back to sleep
+        board_display_error();
+        delay(5000);
+        board_display_stop();
+      }
+      
+      nbiot_deinit();
+      loadcell_deinit();
+      sdcard_deinit();
+    }
+    // if charging, stop
+    else
+    {
+      // display error and get back to sleep
+      Serial.println("board is charging");
+      board_display_error();
+      delay(2000);
+      board_display_stop();
+    }
 
     break;
   
@@ -97,22 +129,33 @@ void setup() {
     else
     {
       Serial.println("enter normal mode");
-      nbiot_sync_time("1.th.pool.ntp.org");
-      // sdcard_init();
-      // loadcell_init();
-      // nbiot_init();
+      board_display_waiting();
+      error_flag |= !sdcard_init();
+      error_flag |= !loadcell_init();
+      error_flag |= !nbiot_init();
 
-      // sync_time();
-
-      // sdcard_deinit();
-      // loadcell_deinit();
-      // nbiot_deinit();
-
+      if (!error_flag)
+      {
+        Serial.println("sync time from sntp server");
+        board_display_processing();
+        nbiot_sync_time("1.th.pool.ntp.org");
+        board_display_stop();
+      }
+      else
+      {
+        board_display_error();
+      }
+      
+      nbiot_deinit();
+      loadcell_deinit();
+      sdcard_deinit();
     }
   }
 
-  // board_display_error();
-  // while(true) delay(10000);
+  if (error_flag)
+  {
+    board_stop_running();
+  }
 
   Serial.println("sleep");
   esp_sleep_enable_ext0_wakeup((gpio_num_t) START_BTN_PIN, 0); // 0 falling edge
@@ -121,10 +164,8 @@ void setup() {
 }
 
 void loop() {
-  while(true) {
-    Serial.println("ERROR");
-    delay(1000);
-  }
+  board_display_fatal();
+  board_stop_running();
 }
 
 
