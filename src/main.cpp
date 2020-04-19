@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include <mw_board.h>
 #include <mw_nbiot.h>
@@ -38,28 +40,11 @@ void setup() {
 
   board_init();
 
-  // while(true)
-  // {
-  //   digitalWrite(RLED_PIN, !digitalRead(BTN_PIN));
-  //   delay(10);
-  // }
-
-  // struct timeval tv;
-  // //struct timezone null; //the documentation said that this is obsolete
-  // gettimeofday(&tv, NULL); // its been nearly two years since I last used pointers and structures so I hope I'm not making a stupid mistake :-)
- 
-  // long hms = tv.tv_sec % SEC_PER_DAY;
-  // hms = (hms + SEC_PER_DAY) % SEC_PER_DAY;
-  // int hour = hms / SEC_PER_HOUR;
-  // int min = (hms % SEC_PER_HOUR) / SEC_PER_MIN;
-  // int sec = (hms % SEC_PER_HOUR) % SEC_PER_MIN; // or hms % SEC_PER_MIN
-
-  // Serial.println("The current time is: "); // P.s. How could i format this like printf("time is: %f%f%f", h, m, s) for example?
-  // Serial.println(hour);
-  // Serial.println(min);
-  // Serial.println(sec);
-
-  // nbiot_sync_time("1.th.pool.ntp.org");
+  struct timeval tv;
+  time_t nowtime;
+  struct tm *nowtm;
+  struct tm time;
+  char tmbuf[64], buf[64];
 
   // while(true) {
   //   Serial.println("ok");
@@ -71,7 +56,16 @@ void setup() {
   // idle loop
   case ESP_SLEEP_WAKEUP_TIMER:
     Serial.println("sync time");
-    sync_time();
+    gettimeofday(&tv, NULL);
+  
+    nowtime = tv.tv_sec;
+    nowtm = localtime(&nowtime);
+    strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
+
+    Serial.println("The current time is: "); // P.s. How could i format this like printf("time is: %f%f%f", h, m, s) for example?
+    Serial.println(tmbuf);
+
+    // sync_time();
     break;
 
   // idle user btn interupt
@@ -93,7 +87,9 @@ void setup() {
     // Serial.println(wakeup_reason);
     // check maintenance button -> maintenance mode flag
 
-    if (digitalRead(MODE_CONFIG_PIN)==LOW)
+    // if (digitalRead(MODE_CONFIG_PIN)==LOW)
+    // bypass
+    if (false)
     {
       Serial.println("enter maintenance mode");
       
@@ -101,6 +97,7 @@ void setup() {
     else
     {
       Serial.println("enter normal mode");
+      nbiot_sync_time("1.th.pool.ntp.org");
       // sdcard_init();
       // loadcell_init();
       // nbiot_init();
@@ -110,6 +107,7 @@ void setup() {
       // sdcard_deinit();
       // loadcell_deinit();
       // nbiot_deinit();
+
     }
   }
 

@@ -1,4 +1,7 @@
 #include <Arduino.h>
+#include <time.h>
+#include <sys/time.h>
+
 #include <dv_sim7020e.h>
 #include <mw_nbiot.h>
 
@@ -69,6 +72,12 @@ void nbiot_upload_data(String host, uint16_t port, uint8_t *buffer, size_t lengt
 
 void nbiot_sync_time(String host)
 {
+  int start_index;
+  String output_str, time_str;
+  struct tm now_tm;
+  time_t now_time;
+  struct timeval tv;
+
   nbiot_init();
   for (int i=0;i<5;i++)
   {
@@ -76,10 +85,33 @@ void nbiot_sync_time(String host)
     Serial.print("1) ");
     Serial.println(sim7020.getOutputString());
     Serial.print("2) ");
-    Serial.println(sim7020.getOutputString().indexOf("+CSNTP:"));
+    output_str = sim7020.getOutputString();
+    start_index = output_str.indexOf("+CSNTP:");
+    Serial.println(start_index);
     Serial.print("3) ");
-    Serial.println(sim7020.getReturnString());
+    // Serial.println(sim7020.getReturnString());
+
+    if(start_index >= 0)
+    {
+      time_str = output_str.substring(start_index+8,start_index+25);
+      Serial.println(time_str);
+
+      now_tm.tm_year = time_str.substring(0,2).toInt() + 2000 - 1900;
+      now_tm.tm_mon = time_str.substring(3,5).toInt() - 1;
+      now_tm.tm_mday = time_str.substring(6,8).toInt();
+      now_tm.tm_hour = time_str.substring(9,11).toInt();
+      now_tm.tm_min = time_str.substring(12,14).toInt();
+      now_tm.tm_sec = time_str.substring(15,17).toInt();
+      now_tm.tm_isdst = -1;
+      now_time = mktime(&now_tm);
+      tv.tv_sec = now_time;
+      tv.tv_usec = 0;
+      settimeofday(&tv, NULL);
+
+      break;
+    }
     Serial.println();
+
     delay(1000);
   }
   
