@@ -1,9 +1,11 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <mw_board.h>
 
 #include <board_config.h>
 
 hw_timer_t * timer = NULL;
+board_stored_data_t board_stored_data;
 
 void IRAM_ATTR toggle_red_led(){
   digitalWrite(RLED_PIN, !digitalRead(RLED_PIN));
@@ -16,6 +18,11 @@ void IRAM_ATTR toggle_green_led(){
 bool board_init(void)
 {
   Serial.begin(115200);
+
+  EEPROM.begin(sizeof(board_stored_data_t));
+  EEPROM.get(0, board_stored_data);
+  Serial.print("serial: ");
+  Serial.println(board_stored_data.serial_number);
 
   pinMode(GLED_PIN, OUTPUT);
   pinMode(RLED_PIN, OUTPUT);
@@ -44,6 +51,18 @@ bool board_is_charging(void)
 void board_stop_running(void)
 {
   while(true) delay(10000);
+}
+
+void board_save_data(board_stored_data_t stored_data)
+{
+  board_stored_data = stored_data;
+  EEPROM.put(0, stored_data);
+  EEPROM.commit();
+}
+
+board_stored_data_t board_get_data(void)
+{
+  return board_stored_data;
 }
 
 void board_display_stop(void)

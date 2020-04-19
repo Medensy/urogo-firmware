@@ -4,6 +4,11 @@
 #include <board_config.h>
 
 HX711 scale;
+float loadcell_m;
+int32_t loadcell_a;
+
+// y = (x-a)*m
+// y = mx - ma -> c = -ma
 
 bool loadcell_init(void)
 {
@@ -49,7 +54,7 @@ size_t loadcell_collect_data(int32_t *buffer, size_t max_length, uint32_t timeou
   {
     if (scale.is_ready())
     {
-      buffer[i] = scale.read();
+      buffer[i] = int((scale.read()-loadcell_a)*loadcell_m);
       Serial.print(i);
       Serial.print(") ");
       Serial.println(buffer[i]);
@@ -62,4 +67,40 @@ size_t loadcell_collect_data(int32_t *buffer, size_t max_length, uint32_t timeou
     }
   }
   return i;
+}
+
+void loadcell_get_config(float *m, int32_t *a){
+  *a = loadcell_a;
+  *m = loadcell_m;
+}
+
+void loadcell_set_config(float m, int32_t a)
+{
+  loadcell_a = a;
+  loadcell_m = m;
+}
+
+void loadcell_set_zero(void)
+{
+  int32_t val;
+  
+  while (!scale.is_ready()) {};
+  
+  // y = (x-a)*m
+  // (y=0, m=1) -> 0 = x-a
+  // a = x
+  val = scale.read_average(10);
+  loadcell_a = val;
+}
+
+void loadcell_set_weight(int32_t weight)
+{
+  int32_t val;
+  
+  while (!scale.is_ready()) {};
+  
+  val = scale.read_average(10);
+  // y = (x-a)*m
+  // m = y/(x-a)
+  loadcell_m = weight/float(val-loadcell_a);
 }

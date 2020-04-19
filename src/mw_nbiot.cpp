@@ -48,7 +48,7 @@ void nbiot_deinit(void)
   sim7020.deinit();
 }
 
-void nbiot_upload_data(String host, uint16_t port, uint8_t *buffer, size_t length)
+void nbiot_upload_data(String host, uint16_t port, String path,  uint8_t *buffer, size_t length)
 {
   sim7020.createHTTPSocket(host, port);
   sim7020.connectHTTPSocket(0);
@@ -57,7 +57,7 @@ void nbiot_upload_data(String host, uint16_t port, uint8_t *buffer, size_t lengt
   String content_type = "application/octet-stream";
   String data = sim7020._bufferToHexString(buffer, length);
 
-  sim7020.sendHTTPData(0, 1, "/", customer_header, content_type, data);
+  sim7020.sendHTTPData(0, 1, path, customer_header, content_type, data);
 
   sim7020.disconnectHTTPSocket(0);
   sim7020.closeHTTPSocket(0);
