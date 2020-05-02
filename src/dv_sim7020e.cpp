@@ -59,7 +59,7 @@ bool SIM7020::readOk(void) {
   return output.indexOf("OK")>=0;
 }
 
-bool SIM7020::sendCmd(String cmd, String ok_str, String err_str) {
+bool SIM7020::sendCmd(String cmd, String ok_str, String err_str, unsigned long timeout) {
   if (debug) {
     Serial.println(cmd);
   }
@@ -72,7 +72,7 @@ bool SIM7020::sendCmd(String cmd, String ok_str, String err_str) {
   bool timeout_flag = false;
   do {
     while ((!serial_ptr->available()) && (!timeout_flag)) {
-      if (millis() - start_time >= 3000){
+      if (millis() - start_time >= timeout){
         timeout_flag = true;
         break;
       }
@@ -101,16 +101,20 @@ bool SIM7020::sendCmd(String cmd, String ok_str, String err_str) {
     }
   } while(true);
 
-  Serial.println("timeout");
+  Serial.println("command timeout");
   return false;
 }
 
+bool SIM7020::sendCmd(String cmd, String ok_str, String err_str) {
+  return sendCmd(cmd, ok_str, err_str, 3000);
+}
+
 bool SIM7020::sendCmd(String cmd, String ok_str) {
-  return sendCmd(cmd, ok_str, "ERROR");
+  return sendCmd(cmd, ok_str, "ERROR", 3000);
 }
 
 bool SIM7020::sendCmd(String cmd) {
-  return sendCmd(cmd, "OK", "ERROR");
+  return sendCmd(cmd, "OK", "ERROR", 3000);
 }
 
 String SIM7020::getOutputString(void) {
@@ -244,6 +248,23 @@ bool SIM7020::sendHTTPData(int socket_id, int method, String path, String custom
   return sendCmd(cmd,"+CHTTPNMIC:");
 }
 
+// AT+CHTTPSENDEXT
+bool SIM7020::sendLongHTTPData(uint8_t flag, size_t total_len, size_t len, String combinded_str)
+{
+  String cmd = "AT+CHTTPSENDEXT="+String(flag)+","+String(total_len)+","+String(len)+","+combinded_str;
+  // flag == 0 -> last packet
+  if (flag)
+  {
+    // has more packet
+    return sendCmd(cmd, "OK", "ERROR");
+  }
+  else
+  {
+    // last packet 
+    return sendCmd(cmd,"+CHTTPNMIC:", "ERROR", 15000);
+  }
+}
+
 // AT+CHTTPCREATE?
 String SIM7020::listHTTPSockets() {
   String cmd = "AT+CHTTPCREATE?";
@@ -280,7 +301,7 @@ String SIM7020::_stringToHexString(String str) {
     sprintf(buf, "%.2x", int(str.charAt(i)));
     output += String(buf);
   }
-  Serial.println(output);
+  // Serial.println(output);
   return output;
 }
 
@@ -291,7 +312,7 @@ String SIM7020::_bufferToHexString(uint8_t buf[], size_t len) {
     sprintf(tmp_buf, "%.2x", buf[i]);
     output += String(tmp_buf);
   }
-  Serial.println(output);
+  // Serial.println(output);
   return output;
 }
 

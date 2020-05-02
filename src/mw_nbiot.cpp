@@ -9,8 +9,34 @@
 
 SIM7020 sim7020;
 
+// void nbiot_test(void) {
+//   int socket_id = 0;
+//   int method = 1; // post
+//   String path_str = "/setBikeData";
+//   unsigned int path_len = path_str.length();
+//   String header_str = "4163636570743a202a2f2a0d0a436f6e6e656374696f6e3a204b6565702d416c6976650d0a557365722d4167656e743a2053494d434f4d5f4d4f44554c450d0a";
+//   unsigned int header_len = header_str.length();
+//   String content_type_str = "application/json";
+//   unsigned int content_type_len = content_type_str.length();
+//   String content_str = "7B22646576534E223A3836383333343033303030393730322C22646174614C697374223A205B5B302E3137303030302C3131332E3633323737352C33342E3734383832372C3131332E35302C302E3030303030302C31322C302E33382C312C313532353538333938335D2C5B302E3436303030302C3131332E3633323737382C33342E3734383832312C3131352E31302C302E3030303030302C31322C302E33382C312C313532353538333938355D2C5B302E3635303030302C3131332E3633323737392C33342E3734383831332C3131362E37302C302E3030303030302C31322C302E33362C312C313532353538333938375D2C5B302E3730303030302C3131332E3633323830332C33342E3734383830342C3131372E33302C302E3030303030302C31302C302E33362C312C313532353538333939315D2C5B302E3338303030302C3131332E3633323830322C33342E3734383830342C3131372E39302C302E3030303030302C31302C302E33382C312C313532353538333939335D5D7D";
+//   unsigned int content_len = content_str.length();
+
+//   String combinded_data = String(socket_id) + "," + method +"," +
+//     String(path_len) + ",\"" + path_str + "\"," +
+//     header_len + "," + header_str + "," +
+//     content_type_len + ",\"" + content_type_str + "\"," +
+//     content_len + "," + content_str;
+
+//   Serial.print("length: ");
+//   Serial.println(combinded_data.length());
+//   Serial.print("data: ");
+//   Serial.println(combinded_data);
+// }
+
 bool nbiot_init(void)
 {
+  // nbiot_test();
+
   uint32_t start_time = millis();
 
   sim7020.init(9600, true);
@@ -50,14 +76,76 @@ void nbiot_deinit(void)
 
 void nbiot_upload_data(String host, uint16_t port, String path,  uint8_t *buffer, size_t length)
 {
+  int i;
+  int last_index = 0;
+  int find_index = 0;
+  size_t total_len = 0;
+  const int bytes_per_packet = 400;
+
+  int socket_id = 0;
+  int method = 1; // post
+  String path_str = path;
+  unsigned int path_len = path_str.length();
+  String header_str = sim7020._stringToHexString("Accept: */*\r\nConnection: Keep-Alive\r\nUser-Agent: SIMCOM_MODULE\r\n");
+  // String header_str = sim7020._stringToHexString("Accept: */*\r\nUser-Agent: SIMCOM_MODULE\r\nExpect:100-continue\r\n");
+  unsigned int header_len = header_str.length();
+  String content_type_str = "application/octet-stream";
+  unsigned int content_type_len = content_type_str.length();
+  String content_str = sim7020._bufferToHexString(buffer, length);
+  unsigned int content_len = content_str.length();
+
+  String packet_str = "";
+
+  String combinded_data = String(socket_id) + "," + method +"," +
+    String(path_len) + ",\"" + path_str + "\"," +
+    header_len + "," + header_str + "," +
+    content_type_len + ",\"" + content_type_str + "\"," +
+    content_len + "," + content_str;
+
+  total_len = combinded_data.length();
+
+  // Serial.print("buf length: ");
+  // Serial.println(length);
+  // Serial.print("content length: ");
+  // Serial.println(content_len);
+
+  // Serial.print("length: ");
+  // Serial.println(combinded_data.length());
+  // Serial.print("data: ");
+  // Serial.println(combinded_data);
+
   sim7020.createHTTPSocket(host, port);
   sim7020.connectHTTPSocket(0);
 
-  String customer_header = "Accept: */*\r\nConnection: Keep-Alive\r\nUser-Agent: SIMCOM_MODULE\r\n";
-  String content_type = "application/octet-stream";
-  String data = sim7020._bufferToHexString(buffer, length);
+  // find last "," before content
+  for (i=0;i<8;i++)
+  {
+    find_index = combinded_data.indexOf(',', find_index) + 1;
+  }
+  // send first packet (header)
+  // Serial.print("sub string:");
+  // Serial.println(combinded_data.substring(0, last_index));
+  packet_str = combinded_data.substring(0, find_index);
+  sim7020.sendLongHTTPData(1, total_len, packet_str.length(), packet_str);
+  last_index += packet_str.length();
 
-  sim7020.sendHTTPData(0, 1, path, customer_header, content_type, data);
+  while (last_index + bytes_per_packet < total_len)
+  {
+    // packet_len = bytes_per_packet;
+    // Serial.print("sub string (cont.):");
+    // Serial.println(combinded_data.substring(last_index, last_index+bytes_per_packet));
+    packet_str = combinded_data.substring(last_index, last_index+bytes_per_packet);
+    sim7020.sendLongHTTPData(1, total_len, packet_str.length(), packet_str);
+    last_index += packet_str.length();
+  }
+
+  // send last packet
+  // packet_len = total_len - last_index;
+  // Serial.print("sub string:");
+  // Serial.println(combinded_data.substring(last_index, total_len));
+  packet_str = combinded_data.substring(last_index, total_len);
+  sim7020.sendLongHTTPData(0, total_len, packet_str.length(), packet_str);
+
 
   sim7020.disconnectHTTPSocket(0);
   sim7020.closeHTTPSocket(0);

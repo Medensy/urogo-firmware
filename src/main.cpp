@@ -14,6 +14,9 @@ size_t data_idx = 0;
 
 board_stored_data_t stored_data;
 
+// curl -X POST --data-binary @02.jpg --header "Content-Type: application/octet-stream" 13.250.110.28/1234/02-05-20
+// curl -X POST --data-binary @debug.txt --header "Content-Type: application/octet-stream" 13.250.110.28/1234/02-05-20
+
 void setup() {
   bool error_flag = false;
   esp_sleep_wakeup_cause_t wakeup_reason;
@@ -88,13 +91,15 @@ void setup() {
         board_display_measuring();
         // set load cell scaling
         loadcell_set_config(stored_data.loadcell_m, stored_data.loadcell_a);
-        len = loadcell_collect_data(data_buf, MAX_DATA_LENGTH, 30000);
+        // pop, back to 180 s -> 180000
+        len = loadcell_collect_data(data_buf, MAX_DATA_LENGTH, 180000);
 
         board_display_processing();
         sdcard_save_data(String(tm_buf)+".bin", (uint8_t*) data_buf, len*4);
 
-        path_str = String("/")+String(stored_data.serial_number)+String("/")+String(tm_buf);
-        nbiot_upload_data(UPLOAD_SERVER, 3000, path_str, (uint8_t*) data_buf, len*4);
+        path_str = "/"+String(stored_data.serial_number)+"/"+String(tm_buf);
+        // path_str = "/api/urogo/test";
+        nbiot_upload_data(UPLOAD_SERVER, UPLOAD_PORT, path_str, (uint8_t*) data_buf, len*4);
 
         board_display_stop();
       }
@@ -257,7 +262,7 @@ void setup() {
 
   Serial.println("sleep");
   esp_sleep_enable_ext0_wakeup((gpio_num_t) START_BTN_PIN, 0); // 0 falling edge
-  esp_sleep_enable_timer_wakeup(SLEEP_PERIOD_US);
+  // esp_sleep_enable_timer_wakeup(SLEEP_PERIOD_US);
   esp_deep_sleep_start();
 }
 
