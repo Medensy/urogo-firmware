@@ -74,7 +74,7 @@ void nbiot_deinit(void)
   sim7020.deinit();
 }
 
-void nbiot_upload_data(String host, uint16_t port, String path,  uint8_t *buffer, size_t length)
+void nbiot_upload_data(String host, uint16_t port, String path, String serial_number, String secret_key, long timestamp, uint8_t *buffer, size_t length)
 {
   int i;
   int last_index = 0;
@@ -86,8 +86,16 @@ void nbiot_upload_data(String host, uint16_t port, String path,  uint8_t *buffer
   int method = 1; // post
   String path_str = path;
   unsigned int path_len = path_str.length();
-  String header_str = sim7020._stringToHexString("Accept: */*\r\nConnection: Keep-Alive\r\nUser-Agent: SIMCOM_MODULE\r\n");
-  // String header_str = sim7020._stringToHexString("Accept: */*\r\nUser-Agent: SIMCOM_MODULE\r\nExpect:100-continue\r\n");
+  String header = "";
+  header += "Accept: */*\r\n";
+  header += "Connection: Keep-Alive\r\n";
+  header += "User-Agent: SIMCOM_MODULE\r\n";
+  header += "Device-Serial: " + String(serial_number) + "\r\n";
+  header += "Device-Secret:" + String(secret_key) + "\r\n";
+  header += "Time:" + String(timestamp) + "\r\n";
+  Serial.println(header);
+  String header_str = sim7020._stringToHexString(header);
+  
   unsigned int header_len = header_str.length();
   String content_type_str = "application/octet-stream";
   unsigned int content_type_len = content_type_str.length();

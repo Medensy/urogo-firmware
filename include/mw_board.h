@@ -1,6 +1,7 @@
 typedef struct 
 {
   char serial_number[11]; //serial number
+  char secret_key[33];
   float loadcell_m;
   int32_t loadcell_a;
 } board_stored_data_t;

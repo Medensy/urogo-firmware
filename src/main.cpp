@@ -96,12 +96,9 @@ void setup() {
 
         board_display_processing();
         sdcard_save_data(String(tm_buf)+".bin", (uint8_t*) data_buf, len*4);
-
-        // path_str = "/"+String(stored_data.serial_number)+"/"+String(tm_buf);
-        // path_str = "/api/urogo/test";
         path_str = "/api/nb/"+String(stored_data.serial_number)+"/"+String(tm_buf);
         Serial.println(path_str);
-        nbiot_upload_data(UPLOAD_SERVER, UPLOAD_PORT, path_str, (uint8_t*) data_buf, len*4);
+        nbiot_upload_data(UPLOAD_SERVER, UPLOAD_PORT, path_str, stored_data.serial_number, stored_data.secret_key, now_time, (uint8_t*) data_buf, len*4);
 
         board_display_stop();
       }
@@ -181,8 +178,20 @@ void setup() {
           {
             Serial.println("Set serial number");
             param_str = cmd_str.substring(7, cmd_str.length());
-            param_str.toCharArray(stored_data.serial_number, 11, 0);
+            param_str.toCharArray(stored_data.serial_number, param_str.length());
             Serial.println(stored_data.serial_number);
+          }
+          else if (cmd_str.indexOf("GET_SK") >= 0)
+          {
+            Serial.println("Get secret key");
+            Serial.println(stored_data.secret_key);
+          }
+          else if (cmd_str.indexOf("SET_SK") >= 0)
+          {
+            Serial.println("Set secret key");
+            param_str = cmd_str.substring(7, cmd_str.length());
+            param_str.toCharArray(stored_data.secret_key, param_str.length());
+            Serial.println(stored_data.secret_key);
           }
           else if (cmd_str.indexOf("CAL 0") >= 0)
           {
@@ -222,6 +231,8 @@ void setup() {
             Serial.println("Print");
             Serial.print("Serial number: ");
             Serial.println(stored_data.serial_number);
+            Serial.print("Secret key: ");
+            Serial.println(stored_data.secret_key);
             Serial.print("Load cell m: ");
             Serial.println(stored_data.loadcell_m);
             Serial.print("Load cell a: ");
