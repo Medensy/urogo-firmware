@@ -97,8 +97,10 @@ void setup() {
         board_display_processing();
         sdcard_save_data(String(tm_buf)+".bin", (uint8_t*) data_buf, len*4);
 
-        path_str = "/"+String(stored_data.serial_number)+"/"+String(tm_buf);
+        // path_str = "/"+String(stored_data.serial_number)+"/"+String(tm_buf);
         // path_str = "/api/urogo/test";
+        path_str = "/api/nb/"+String(stored_data.serial_number)+"/"+String(tm_buf);
+        Serial.println(path_str);
         nbiot_upload_data(UPLOAD_SERVER, UPLOAD_PORT, path_str, (uint8_t*) data_buf, len*4);
 
         board_display_stop();
@@ -187,6 +189,7 @@ void setup() {
             Serial.println("Calibrate weight 0");
             loadcell_set_zero();
             loadcell_get_config(&stored_data.loadcell_m, &stored_data.loadcell_a);
+            Serial.println("Done");
           }
           else if (cmd_str.indexOf("CAL") >= 0)
           {
@@ -195,6 +198,7 @@ void setup() {
             Serial.println(param_str.toInt());
             loadcell_set_weight(param_str.toInt());
             loadcell_get_config(&stored_data.loadcell_m, &stored_data.loadcell_a);
+            Serial.println("Done");
           }
           else if (cmd_str.indexOf("WEIGHT") >= 0)
           {
@@ -270,5 +274,3 @@ void loop() {
   board_display_fatal();
   board_stop_running();
 }
-
-

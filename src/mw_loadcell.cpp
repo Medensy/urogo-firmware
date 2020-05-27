@@ -27,7 +27,7 @@ bool loadcell_init(void)
     {
       tmp = millis() - t;
       // check 10 hz
-      if (tmp >= 99 && tmp <= 101) {
+      if (tmp >= 98 && tmp <= 102) {
         Serial.println("Initialize HX711 [PASS]");
         return true;
       }
