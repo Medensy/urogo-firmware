@@ -96,8 +96,9 @@ void setup() {
 
         board_display_processing();
         sdcard_save_data(String(tm_buf)+".bin", (uint8_t*) data_buf, len*4);
-        path_str = "/api/nb/"+String(stored_data.serial_number)+"/"+String(tm_buf);
-        Serial.println(path_str);
+        
+        path_str = "/api/nb";
+        
         nbiot_upload_data(UPLOAD_SERVER, UPLOAD_PORT, path_str, stored_data.serial_number, stored_data.secret_key, now_time, (uint8_t*) data_buf, len*4);
 
         board_display_stop();
