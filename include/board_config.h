@@ -27,14 +27,14 @@
 /* board configuration */
 #define SLEEP_PERIOD_US 86400*1000000 // 1 day time sync
 #define MAX_DATA_LENGTH 1800 // max data buffer, sampling rate 10 SPS, record time 180 s
-// 60 works
+// #define MAX_DATA_LENGTH 30 // max data buffer, sampling rate 10 SPS, record time 180 s
 
 /* middleware  configuration */
 #define HX711_INIT_TIMEOUT 2500
 #define SIM7020_INIT_TIMEOUT 30000
+
 // nb-iot config
-// #define UPLOAD_SERVER "http://er.medensy.com"
-// #define UPLOAD_SERVER "http://13.250.110.28"
 #define UPLOAD_SERVER "http://urogo.medensy.com"
 #define UPLOAD_PORT 80
+#define UPLOAD_PATH "/api/nb"
 #define SNTP_SERVER "1.th.pool.ntp.org"

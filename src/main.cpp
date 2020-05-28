@@ -32,8 +32,6 @@ void setup() {
   struct tm *now_tm;
   char tm_buf[64];
 
-  String path_str;
-
   wakeup_reason = esp_sleep_get_wakeup_cause();
 
   board_init();
@@ -75,31 +73,43 @@ void setup() {
     {
       error_flag |= !sdcard_init();
       error_flag |= !loadcell_init();
-      error_flag |= !nbiot_init();
 
       if (!error_flag)
       {
-        nbiot_sync_time(SNTP_SERVER);
-        
-        gettimeofday(&tv, NULL);
-        now_time = tv.tv_sec;
-        now_tm = localtime(&now_time);
-        strftime(tm_buf, sizeof tm_buf, "%Y-%m-%d-%H-%M-%S", now_tm);
-
-        Serial.print("measuring ");
-        Serial.println(tm_buf);
+        /* start measuring */
         board_display_measuring();
-        // set load cell scaling
+        /* set load cell scaling */
         loadcell_set_config(stored_data.loadcell_m, stored_data.loadcell_a);
         // pop, back to 180 s -> 180000
         len = loadcell_collect_data(data_buf, MAX_DATA_LENGTH, 180000);
 
         board_display_processing();
+        /* init nbiot */
+        if (nbiot_init())
+        {
+          /* sync time with server */
+          nbiot_sync_time(SNTP_SERVER);
+          /* read time from rtc */
+          gettimeofday(&tv, NULL);
+          now_time = tv.tv_sec;
+          now_tm = localtime(&now_time);
+          strftime(tm_buf, sizeof tm_buf, "%Y-%m-%d-%H-%M-%S", now_tm);
+          /* upload file */
+          nbiot_upload_data(UPLOAD_SERVER, UPLOAD_PORT, UPLOAD_PATH, stored_data.serial_number, stored_data.secret_key, now_time, (uint8_t*) data_buf, len*2);
+          nbiot_deinit();
+        }
+        else
+        {
+          /* read time from rtc */
+          gettimeofday(&tv, NULL);
+          now_time = tv.tv_sec;
+          now_tm = localtime(&now_time);
+          strftime(tm_buf, sizeof tm_buf, "%Y-%m-%d-%H-%M-%S", now_tm);
+        }
+
+        Serial.println(tm_buf);  
+        /* save data to sd card */      
         sdcard_save_data(String(tm_buf)+".bin", (uint8_t*) data_buf, len*2);
-        
-        path_str = "/api/nb";
-        
-        nbiot_upload_data(UPLOAD_SERVER, UPLOAD_PORT, path_str, stored_data.serial_number, stored_data.secret_key, now_time, (uint8_t*) data_buf, len*2);
 
         board_display_stop();
       }
@@ -111,7 +121,6 @@ void setup() {
         board_display_stop();
       }
       
-      nbiot_deinit();
       loadcell_deinit();
       sdcard_deinit();
     }
