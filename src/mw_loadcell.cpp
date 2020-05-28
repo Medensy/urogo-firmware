@@ -45,16 +45,22 @@ void loadcell_deinit(void)
   digitalWrite(HX711_PWR_EN_PIN, LOW);
 }
 
-size_t loadcell_collect_data(int32_t *buffer, size_t max_length, uint32_t timeout)
+size_t loadcell_collect_data(int16_t *buffer, size_t max_length, uint32_t timeout)
 {
   size_t i=0;
   uint32_t start_time=millis();
+  float tmp;
   
   while((i < max_length) && (millis() - start_time < timeout))
   {
     if (scale.is_ready())
     {
-      buffer[i] = int((scale.read()-loadcell_a)*loadcell_m);
+      tmp = (scale.read()-loadcell_a)*loadcell_m;
+      // clipping
+      tmp = tmp <= 32767 ? tmp : 32767;
+      tmp = tmp >= -32768 ? tmp :- 32768;
+      // convert float to int
+      buffer[i] = int(tmp);
       Serial.print(i);
       Serial.print(") ");
       Serial.println(buffer[i]);

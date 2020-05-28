@@ -9,7 +9,7 @@
 
 #include <board_config.h>
 
-int32_t data_buf[MAX_DATA_LENGTH];
+int16_t data_buf[MAX_DATA_LENGTH];
 size_t data_idx = 0;
 
 board_stored_data_t stored_data;
@@ -24,7 +24,7 @@ void setup() {
   int i;
   String cmd_str;
   String param_str;
-  int64_t loadcell_sum;
+  int32_t loadcell_sum;
 
   size_t len;
   struct timeval tv;
@@ -95,11 +95,11 @@ void setup() {
         len = loadcell_collect_data(data_buf, MAX_DATA_LENGTH, 180000);
 
         board_display_processing();
-        sdcard_save_data(String(tm_buf)+".bin", (uint8_t*) data_buf, len*4);
+        sdcard_save_data(String(tm_buf)+".bin", (uint8_t*) data_buf, len*2);
         
         path_str = "/api/nb";
         
-        nbiot_upload_data(UPLOAD_SERVER, UPLOAD_PORT, path_str, stored_data.serial_number, stored_data.secret_key, now_time, (uint8_t*) data_buf, len*4);
+        nbiot_upload_data(UPLOAD_SERVER, UPLOAD_PORT, path_str, stored_data.serial_number, stored_data.secret_key, now_time, (uint8_t*) data_buf, len*2);
 
         board_display_stop();
       }
