@@ -14,9 +14,6 @@ size_t data_idx = 0;
 
 board_stored_data_t stored_data;
 
-// curl -X POST --data-binary @02.jpg --header "Content-Type: application/octet-stream" 13.250.110.28/1234/02-05-20
-// curl -X POST --data-binary @debug.txt --header "Content-Type: application/octet-stream" 13.250.110.28/1234/02-05-20
-
 void setup() {
   bool error_flag = false;
   esp_sleep_wakeup_cause_t wakeup_reason;
@@ -280,7 +277,7 @@ void setup() {
 
   Serial.println("sleep");
   esp_sleep_enable_ext0_wakeup((gpio_num_t) START_BTN_PIN, 0); // 0 falling edge
-  // esp_sleep_enable_timer_wakeup(SLEEP_PERIOD_US);
+  esp_sleep_enable_timer_wakeup(SLEEP_PERIOD_US);
   esp_deep_sleep_start();
 }
 

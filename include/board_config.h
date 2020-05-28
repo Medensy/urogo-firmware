@@ -25,7 +25,7 @@
 #define PROG_RX_PIN 35
 
 /* board configuration */
-#define SLEEP_PERIOD_US 86400*1000000 // 1 day time sync
+#define SLEEP_PERIOD_US ((uint64_t) 86400)*1000000 // 1 day time sync
 #define MAX_DATA_LENGTH 1800 // max data buffer, sampling rate 10 SPS, record time 180 s
 // #define MAX_DATA_LENGTH 30 // max data buffer, sampling rate 10 SPS, record time 180 s
 
