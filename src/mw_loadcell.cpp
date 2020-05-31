@@ -12,6 +12,12 @@ int32_t loadcell_a;
 // y = (x-a)*m
 // y = mx - ma -> c = -ma
 
+typedef enum {
+  LOADCELL_NOT_READY,
+  LOADCELL_MEASURING,
+  LOADCELL_DONE,
+} loadcell_state_t;
+
 bool loadcell_init(void)
 {
   rtc_gpio_hold_dis((gpio_num_t) HX711_SCK_PIN);
@@ -50,11 +56,13 @@ void loadcell_deinit(void)
   rtc_gpio_hold_en((gpio_num_t) HX711_PWR_EN_PIN);
 }
 
-size_t loadcell_collect_data(int16_t *buffer, size_t max_length, uint32_t timeout)
+size_t loadcell_collect_data(int16_t *buffer, size_t max_length, uint32_t timeout, bool early_stop_enable)
 {
   size_t i=0;
   uint32_t start_time=millis();
   float tmp;
+
+  loadcell_state_t state = LOADCELL_NOT_READY;
   
   while((i < max_length) && (millis() - start_time < timeout))
   {
@@ -66,14 +74,26 @@ size_t loadcell_collect_data(int16_t *buffer, size_t max_length, uint32_t timeou
       tmp = tmp >= -32768 ? tmp :- 32768;
       // convert float to int
       buffer[i] = int(tmp);
+      // first threshold 100 g
+      if ((state == LOADCELL_NOT_READY) && (tmp >= 1000))
+      {
+        state = LOADCELL_MEASURING;
+      }
+      else if ((state == LOADCELL_MEASURING) && (tmp < 0))
+      {
+        state = LOADCELL_DONE;
+      }
       Serial.print(i);
       Serial.print(") ");
       Serial.println(buffer[i]);
       i++;
 
-      // pop
-      // break if no weight change
-
+      if ((state == LOADCELL_DONE) && early_stop_enable)
+      {
+        Serial.println("early stop");
+        break;
+      }
+      
       delay(10);
     }
   }

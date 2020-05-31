@@ -139,7 +139,7 @@ void enter_maintenance_mode(void)
       {
         Serial.println("Get weight");
         loadcell_set_config(stored_data.loadcell_m, stored_data.loadcell_a);
-        loadcell_collect_data(data_buf, 10, 3000);
+        loadcell_collect_data(data_buf, 10, 3000, false);
         loadcell_sum = 0;
         for(i=0;i<10;i++)
         {
@@ -217,7 +217,7 @@ void enter_user_main_mode(void)
       /* set load cell scaling */
       loadcell_set_config(stored_data.loadcell_m, stored_data.loadcell_a);
       // pop, back to 180 s -> 180000
-      len = loadcell_collect_data(data_buf, MAX_DATA_LENGTH, 180000);
+      len = loadcell_collect_data(data_buf, MAX_DATA_LENGTH, 180000, true);
 
       board_display_processing();
 
