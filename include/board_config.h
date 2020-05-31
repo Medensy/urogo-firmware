@@ -9,8 +9,8 @@
 #define HX711_SCK_PIN 2
 #define HX711_PWR_EN_PIN 13
 
-#define ADC_BATT_EN_PIN 0
-#define ADC_BATT_ADC_PIN 36
+#define BATT_EN_PIN 0
+#define BATT_ADC_PIN 36
 #define CHRG_DT_PIN 39
 
 // #define SD_CS0_PIN 5

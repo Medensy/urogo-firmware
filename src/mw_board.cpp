@@ -1,5 +1,8 @@
 #include <Arduino.h>
 #include <EEPROM.h>
+// esp32 rtc pin
+#include <driver/rtc_io.h>
+
 #include <mw_board.h>
 
 #include <board_config.h>
@@ -18,6 +21,7 @@ void IRAM_ATTR toggle_green_led(){
 bool board_init(void)
 {
   Serial.begin(115200);
+  rtc_gpio_hold_dis((gpio_num_t) BATT_EN_PIN);
 
   EEPROM.begin(sizeof(board_stored_data_t));
   EEPROM.get(0, board_stored_data);
@@ -29,6 +33,8 @@ bool board_init(void)
   pinMode(MODE_CONFIG_PIN, INPUT);
   pinMode(START_BTN_PIN, INPUT);
   pinMode(CHRG_DT_PIN, INPUT);
+  pinMode(BATT_EN_PIN, OUTPUT);
+  pinMode(BATT_ADC_PIN, INPUT);
   
   timer = timerBegin(0, 80, true);
 
@@ -41,7 +47,7 @@ bool board_init(void)
 
 void board_deinit(void)
 {
-
+  rtc_gpio_hold_en((gpio_num_t) BATT_EN_PIN);
 }
 bool board_is_charging(void)
 {

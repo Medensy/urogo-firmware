@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <dv_hx711.h>
+// esp32 rtc pin
+#include <driver/rtc_io.h>
 
 #include <board_config.h>
 
@@ -12,6 +14,8 @@ int32_t loadcell_a;
 
 bool loadcell_init(void)
 {
+  rtc_gpio_hold_dis((gpio_num_t) HX711_SCK_PIN);
+  rtc_gpio_hold_dis((gpio_num_t) HX711_PWR_EN_PIN);
   pinMode(HX711_PWR_EN_PIN, OUTPUT);
   digitalWrite(HX711_PWR_EN_PIN, HIGH);
   scale.power_up();
@@ -42,7 +46,8 @@ bool loadcell_init(void)
 void loadcell_deinit(void)
 {
   scale.power_down();
-  digitalWrite(HX711_PWR_EN_PIN, LOW);
+  rtc_gpio_hold_en((gpio_num_t) HX711_SCK_PIN);
+  rtc_gpio_hold_en((gpio_num_t) HX711_PWR_EN_PIN);
 }
 
 size_t loadcell_collect_data(int16_t *buffer, size_t max_length, uint32_t timeout)
