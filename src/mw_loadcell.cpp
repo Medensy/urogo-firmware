@@ -74,12 +74,13 @@ size_t loadcell_collect_data(int16_t *buffer, size_t max_length, uint32_t timeou
       tmp = tmp >= -32768 ? tmp :- 32768;
       // convert float to int
       buffer[i] = int(tmp);
-      // first threshold 100 g
+      // start threshold 100 g
       if ((state == LOADCELL_NOT_READY) && (tmp >= 1000))
       {
         state = LOADCELL_MEASURING;
       }
-      else if ((state == LOADCELL_MEASURING) && (tmp < 0))
+      // stop threshold 20 g (20% of 100 g)
+      else if ((state == LOADCELL_MEASURING) && (tmp < 20))
       {
         state = LOADCELL_DONE;
       }

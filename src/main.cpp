@@ -26,6 +26,8 @@ void enter_user_main_mode(void);
 
 void enter_power_up_mode(void)
 {
+  int i;
+  bool sync_status;
   Serial.println("enter normal mode");
   board_display_waiting();
   error_flag |= !sdcard_init();
@@ -36,7 +38,12 @@ void enter_power_up_mode(void)
   {
     Serial.println("sync time from sntp server");
     board_display_processing();
-    nbiot_sync_time(SNTP_SERVER);
+    /* time sync with server, retrying 3 times */
+    for (i=0; i<3; i++)
+    {
+      sync_status = nbiot_sync_time(SNTP_SERVER);
+      if (sync_status) break;
+    }
     board_display_stop();
   }
   else
@@ -201,6 +208,9 @@ void enter_user_main_mode(void)
   struct tm *now_tm;
   char tm_buf[64];
 
+  int i;
+  bool upload_status;
+
   Serial.println("user interupt");
   board_display_waiting();
 
@@ -235,8 +245,14 @@ void enter_user_main_mode(void)
       /* init nbiot */
       if (nbiot_init())
       {
-        /* upload file */
-        nbiot_upload_data(UPLOAD_SERVER, UPLOAD_PORT, UPLOAD_PATH, stored_data.serial_number, stored_data.secret_key, now_time, (uint8_t*) data_buf, len*2);
+        /* upload file, retrying 3 times*/
+        for (i=0; i<3 ; i++)
+        {
+          upload_status = nbiot_upload_data(UPLOAD_SERVER, UPLOAD_PORT, UPLOAD_PATH, stored_data.serial_number, stored_data.secret_key, now_time, (uint8_t*) data_buf, len*2);
+          Serial.print("upload status: ");
+          Serial.println(upload_status);
+          if (upload_status) break;
+        }
         nbiot_deinit();
       }
       

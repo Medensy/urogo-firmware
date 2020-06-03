@@ -143,7 +143,7 @@ bool nbiot_upload_data(String host, uint16_t port, String path, String serial_nu
 
   // check if http status is 200
   // +CHTTPNMIH: <httpclient_id>,<response_code>,<header_length>,<header>
-  success_flag = sim7020.getOutputString().indexOf("+CHTTPNMIH: 0,200");
+  success_flag = sim7020.getOutputString().indexOf("+CHTTPNMIH: 0,200") >= 0;
 
   sim7020.disconnectHTTPSocket(0);
   sim7020.closeHTTPSocket(0);
