@@ -12,7 +12,9 @@
 - PRINT - Print device stored parameters
 - GET_SN - Get serial number of the device
 - SET_SN [serial number] - Set serial number of the device
+- GET_SK - Get secret key
+- SET_SK [secret key] - Set secret key
 - CAL 0 - Calibrate load cell with weight of zero
-- CAL [weight] - Calibrate load cell with known weight
+- CAL [weight] - Calibrate load cell with known weight (In unit of 0.1 g)
 - WEIGHT - Get weight from load cell
 - SAVE - Save serial number, calibration parameters to flash memory. If not save the device uses previous stored parameters.
