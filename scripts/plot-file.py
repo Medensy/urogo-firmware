@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
-  file_name = '2020-05-28-15-58-10.bin'
+  file_name = '1591174941.bin'
   if len(sys.argv) == 3 and sys.argv[1] == '-f':
     file_name = sys.argv[2]
 
@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
   data_length = int(len(data)/2) # int16 data length
   data = struct.unpack('h'*data_length, data)
- 
+  print(data)
   y = np.array(data)
   x = np.arange(y.shape[0])
   
