@@ -28,11 +28,53 @@ void enter_power_up_mode(void)
 {
   int i;
   bool sync_status;
+  bool sdcard_init_flag;
+  bool loadcell_init_flag;
+  bool nbiot_init_flag;
+
+  struct timeval tv;
+  time_t now_time;
+  struct tm *now_tm;
+  char tm_buf[64];
+
+  String init_log = "";
+  String tm_prefix = "";
+
   Serial.println("enter normal mode");
   board_display_waiting();
-  error_flag |= !sdcard_init();
-  error_flag |= !loadcell_init();
-  error_flag |= !nbiot_init();
+  sdcard_init_flag = sdcard_init();
+  loadcell_init_flag = loadcell_init();
+  nbiot_init_flag = nbiot_init();
+
+  /* read time from rtc */
+  gettimeofday(&tv, NULL);
+  now_time = tv.tv_sec;
+  now_tm = localtime(&now_time);
+  strftime(tm_buf, sizeof(tm_buf), "%Y-%m-%d-%H-%M-%S", now_tm);
+
+  /* prepare log message */
+  tm_prefix = "[" + String(tm_buf) + "] ";
+  init_log += tm_prefix;
+  if (sdcard_init_flag) init_log += "INIT SD CARD [PASS]";
+  else init_log += "INIT SD CARD [FAIL]";
+  init_log += "\n";
+
+  init_log += tm_prefix;
+  if (loadcell_init_flag) init_log += "INIT LOAD CELL [PASS]";
+  else init_log += "INIT LOAD CELL [FAIL]";
+  init_log += "\n";
+  
+  init_log += tm_prefix;
+  if (nbiot_init_flag) init_log += "INIT NB IOT [PASS]";
+  else init_log += "INIT NB IOT [FAIL]";
+  init_log += "\n";
+
+  /* log initialization to sd card */      
+  sdcard_log("initialize.log", init_log);
+
+  error_flag |= !sdcard_init_flag;
+  error_flag |= !loadcell_init_flag;
+  error_flag |= !nbiot_init_flag;
 
   if (!error_flag)
   {
@@ -202,11 +244,17 @@ void enter_time_sync_mode(void)
 void enter_user_main_mode(void)
 {
   size_t len;
+  
+  bool sdcard_init_flag;
+  bool loadcell_init_flag;
 
   struct timeval tv;
   time_t now_time;
   struct tm *now_tm;
   char tm_buf[64];
+
+  String init_log = "";
+  String tm_prefix = "";
 
   int i;
   bool upload_status;
@@ -217,9 +265,33 @@ void enter_user_main_mode(void)
   // if not charging, run normal operation
   if (!board_is_charging())
   {
-    error_flag |= !sdcard_init();
-    error_flag |= !loadcell_init();
+    sdcard_init_flag = sdcard_init();
+    loadcell_init_flag = loadcell_init();
 
+    /* read time from rtc */
+    gettimeofday(&tv, NULL);
+    now_time = tv.tv_sec;
+    now_tm = localtime(&now_time);
+    strftime(tm_buf, sizeof(tm_buf), "%Y-%m-%d-%H-%M-%S", now_tm);
+
+    /* prepare log message */
+    tm_prefix = "[" + String(tm_buf) + "] ";
+    init_log += tm_prefix;
+    if (sdcard_init_flag) init_log += "INIT SD CARD [PASS]";
+    else init_log += "INIT SD CARD [FAIL]";
+    init_log += "\n";
+
+    init_log += tm_prefix;
+    if (loadcell_init_flag) init_log += "INIT LOAD CELL [PASS]";
+    else init_log += "INIT LOAD CELL [FAIL]";
+    init_log += "\n";
+
+    /* log initialization to sd card */      
+    sdcard_log("initialize.log", init_log);
+
+    error_flag |= !sdcard_init_flag;
+    error_flag |= !loadcell_init_flag;
+    
     if (!error_flag)
     {
       /* start measuring */
@@ -235,7 +307,7 @@ void enter_user_main_mode(void)
       gettimeofday(&tv, NULL);
       now_time = tv.tv_sec;
       now_tm = localtime(&now_time);
-      strftime(tm_buf, sizeof tm_buf, "%Y-%m-%d-%H-%M-%S", now_tm);
+      strftime(tm_buf, sizeof(tm_buf), "%Y-%m-%d-%H-%M-%S", now_tm);
 
       Serial.println(tm_buf);
 

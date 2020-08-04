@@ -56,7 +56,8 @@ bool board_is_charging(void)
 
 void board_stop_running(void)
 {
-  while(true) delay(10000);
+  // while(true) delay(10000);
+  delay(5000);
 }
 
 void board_save_data(board_stored_data_t stored_data)

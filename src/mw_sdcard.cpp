@@ -26,3 +26,7 @@ void sdcard_deinit(void)
 void sdcard_save_data(String file_name, uint8_t *buffer, size_t length){
   sdcard.writeFile(file_name, buffer, length);
 }
+
+void sdcard_log(String file_name, String str) {
+  sdcard.appendString(file_name, str);
+}

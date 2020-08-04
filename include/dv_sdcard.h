@@ -13,4 +13,5 @@ class SDCARD {
     void printFileList();
 
     size_t writeFile(String file_name, uint8_t buf[], size_t len);
+    void appendString(String file_name, String str);
 };

@@ -96,3 +96,16 @@ size_t SDCARD::writeFile(String file_name, uint8_t buf[], size_t len)
   }
   return size;
 }
+
+void SDCARD::appendString(String file_name, String str)
+{
+  if (_debug) Serial.println("appending file: /"+file_name);
+  File file = SD.open("/"+file_name, FILE_WRITE);
+  file.seek(EOF);
+  file.println(str);
+  file.close();
+  if (_debug)
+  {
+    Serial.println("fail is appended");
+  }
+}
